@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import sys
 
 from .api import start_api_server
 from .client import LiveViewTotalsCollector
 from .config import AppConfig
+from .install import run_init
 from .store import StateStore
 
 
@@ -17,7 +19,13 @@ def configure_logging(level: str) -> None:
 
 
 def main() -> None:
-    config = AppConfig.from_args()
+    argv = sys.argv[1:]
+    if argv and argv[0] == "init":
+        raise SystemExit(run_init(argv[1:]))
+    if argv and argv[0] == "run":
+        argv = argv[1:]
+
+    config = AppConfig.from_args(argv)
     configure_logging(config.log_level)
 
     logger = logging.getLogger("sa_totals_bridge")

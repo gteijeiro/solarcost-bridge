@@ -20,13 +20,14 @@ class AppConfig:
     log_level: str
     reconnect_delay: float
     heartbeat_interval: float
+    refresh_interval: float
     connect_timeout: float
     daily_history_periods: int
     monthly_history_periods: int
     user_agent: str
 
     @classmethod
-    def from_args(cls) -> "AppConfig":
+    def from_args(cls, argv: list[str] | None = None) -> "AppConfig":
         parser = argparse.ArgumentParser(
             description="Collect SolarAssistant Totals LiveView data and publish it over HTTP."
         )
@@ -50,6 +51,11 @@ class AppConfig:
             default=float(os.getenv("SA_HEARTBEAT_INTERVAL", "30")),
         )
         parser.add_argument(
+            "--refresh-interval",
+            type=float,
+            default=float(os.getenv("SA_REFRESH_INTERVAL", "10")),
+        )
+        parser.add_argument(
             "--connect-timeout",
             type=float,
             default=float(os.getenv("SA_CONNECT_TIMEOUT", "10")),
@@ -68,7 +74,7 @@ class AppConfig:
             "--user-agent",
             default=os.getenv("SA_USER_AGENT", "sa-totals-bridge/0.1"),
         )
-        args = parser.parse_args()
+        args = parser.parse_args(argv)
 
         if not args.base_url:
             parser.error("missing --base-url or SA_BASE_URL")
@@ -84,6 +90,7 @@ class AppConfig:
             log_level=args.log_level.upper(),
             reconnect_delay=args.reconnect_delay,
             heartbeat_interval=args.heartbeat_interval,
+            refresh_interval=max(args.refresh_interval, 0.0),
             connect_timeout=args.connect_timeout,
             daily_history_periods=max(args.daily_history_periods, 0),
             monthly_history_periods=max(args.monthly_history_periods, 0),

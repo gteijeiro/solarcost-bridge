@@ -81,6 +81,7 @@ class LiveViewTotalsCollector:
             "daily": None,
             "monthly": None,
         }
+        self._history_backfilled = False
 
     async def run_forever(self) -> None:
         reconnect_attempts = 0
@@ -138,15 +139,20 @@ class LiveViewTotalsCollector:
             heartbeat_task = asyncio.create_task(self._heartbeat_loop(websocket))
             receiver_task = asyncio.create_task(self._receive_loop(websocket))
             day_watch_task: asyncio.Task[None] | None = None
+            refresh_task: asyncio.Task[None] | None = None
             try:
                 await self._send_join(websocket, page)
                 await self._wait_for_initial_periods(receiver_task)
-                await self._backfill_history(websocket, receiver_task)
+                if not self._history_backfilled:
+                    await self._backfill_history(websocket, receiver_task)
+                    self._history_backfilled = True
                 day_watch_task = asyncio.create_task(
                     self._day_watch_loop(page.gateway_timezone)
                 )
+                if self.config.refresh_interval > 0:
+                    refresh_task = asyncio.create_task(self._refresh_loop())
                 done, _ = await asyncio.wait(
-                    {receiver_task, day_watch_task},
+                    {task for task in (receiver_task, day_watch_task, refresh_task) if task is not None},
                     return_when=asyncio.FIRST_COMPLETED,
                 )
                 for task in done:
@@ -158,6 +164,8 @@ class LiveViewTotalsCollector:
                 receiver_task.cancel()
                 if day_watch_task is not None:
                     day_watch_task.cancel()
+                if refresh_task is not None:
+                    refresh_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await heartbeat_task
                 with contextlib.suppress(asyncio.CancelledError):
@@ -165,6 +173,9 @@ class LiveViewTotalsCollector:
                 if day_watch_task is not None:
                     with contextlib.suppress(asyncio.CancelledError):
                         await day_watch_task
+                if refresh_task is not None:
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await refresh_task
                 self.store.mark_disconnected()
 
     async def _send_join(self, websocket: websockets.ClientConnection, page: TotalsPageContext) -> None:
@@ -189,6 +200,13 @@ class LiveViewTotalsCollector:
             ref = self._next_ref()
             heartbeat = [None, ref, "phoenix", "heartbeat", {}]
             await websocket.send(json.dumps(heartbeat))
+
+    async def _refresh_loop(self) -> None:
+        await asyncio.sleep(self.config.refresh_interval)
+        self.logger.info(
+            "refresh interval reached (%.1fs); reconnecting to refresh current totals",
+            self.config.refresh_interval,
+        )
 
     async def _receive_loop(self, websocket: websockets.ClientConnection) -> None:
         while True:
