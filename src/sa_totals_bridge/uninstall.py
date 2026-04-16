@@ -29,7 +29,7 @@ class BridgeUninstallConfig:
 
 def run_uninstall(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="sa-totals-bridge uninstall",
+        prog="sa-bridge uninstall",
         description="Asistente interactivo para desinstalar el bridge.",
     )
     parser.parse_args(argv)

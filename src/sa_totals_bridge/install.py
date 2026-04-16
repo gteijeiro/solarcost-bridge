@@ -39,7 +39,7 @@ class BridgeInstallConfig:
 
 def run_init(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="sa-totals-bridge init",
+        prog="sa-bridge init",
         description="Asistente interactivo para configurar e instalar el bridge.",
     )
     parser.parse_args(argv)
@@ -67,7 +67,7 @@ def prompt_install_config() -> BridgeInstallConfig:
     ).expanduser()
     default_env_path = runtime_dir / "bridge.env"
     default_db_path = runtime_dir / "data" / "solar_assistant_totals.sqlite3"
-    base_url = prompt_text("URL base de Solar Assistant", "http://192.168.0.79").rstrip("/")
+    base_url = prompt_text("URL base de Solar Assistant", "http://127.0.0.1").rstrip("/")
     password = prompt_secret("Password de Solar Assistant")
     bind_host = prompt_text("Host para publicar la API", "0.0.0.0")
     bind_port = prompt_int("Puerto para publicar la API", 8765)

@@ -15,58 +15,27 @@ Bridge en Python para:
 
 ## Instalacion
 
-En Debian, Raspberry Pi OS y derivados no debes usar `pip install` global porque el sistema bloquea ese flujo con PEP 668 (`externally-managed-environment`).
-
-Primero instala soporte para entornos virtuales:
-
 ```bash
 sudo apt update
 sudo apt install -y python3-full python3-venv
-```
-
-Luego instala el bridge dentro de un `.venv`:
-
-```bash
+mkdir -p /opt/solar-assistant/bridge
+cd /opt/solar-assistant/bridge
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install .
+pip install --upgrade pip
+pip install solar-assistant-costs-bridge
+sudo "$(command -v sa-bridge)" init
 ```
 
-Bootstrap automatico desde el repo:
+El alias corto recomendado es `sa-bridge`. El comando anterior `sa-totals-bridge` sigue funcionando por compatibilidad.
 
-```bash
-./init.sh
-```
-
-Tambien puedes instalarlo directamente desde GitHub:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install "git+https://github.com/gteijeiro/solar-assistant-costs-bridge.git"
-```
-
-Y luego ejecutar el asistente:
-
-```bash
-sa-totals-bridge init
-```
-
-Si quieres instalar un servicio `system`, ejecuta el asistente con `sudo` usando la ruta real del binario del `.venv`:
+Si prefieres mantener el comando anterior, tambien funciona:
 
 ```bash
 sudo "$(command -v sa-totals-bridge)" init
 ```
 
-Si `command -v` no devuelve nada o `sudo` no encuentra el binario, usa la ruta completa:
-
-```bash
-sudo /ruta/a/tu/.venv/bin/sa-totals-bridge init
-```
-
-Si no quieres usar `sudo`, puedes ejecutar `sa-totals-bridge init` normal y elegir `user` como modo de servicio.
+Si Solar Assistant corre en la misma maquina que el bridge, el asistente propone por defecto `http://127.0.0.1`.
 
 ## Desinstalacion
 

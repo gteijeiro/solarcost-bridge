@@ -32,6 +32,7 @@ dependencies = [
 
 [project.scripts]
 sa-totals-bridge = "sa_totals_bridge.__main__:main"
+sa-bridge = "sa_totals_bridge.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/gteijeiro/solar-assistant-costs-bridge"
