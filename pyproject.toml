@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "solarcost-bridge"
-version = "0.1.1"
+version = "0.1.2"
 description = "SolarCost bridge para capturar Totales de Solar Assistant y publicarlos por HTTP."
 readme = "README.md"
 requires-python = ">=3.11"
