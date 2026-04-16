@@ -9,6 +9,7 @@ from .client import LiveViewTotalsCollector
 from .config import AppConfig
 from .install import run_init
 from .store import StateStore
+from .uninstall import run_uninstall
 
 
 def configure_logging(level: str) -> None:
@@ -22,6 +23,8 @@ def main() -> None:
     argv = sys.argv[1:]
     if argv and argv[0] == "init":
         raise SystemExit(run_init(argv[1:]))
+    if argv and argv[0] == "uninstall":
+        raise SystemExit(run_uninstall(argv[1:]))
     if argv and argv[0] == "run":
         argv = argv[1:]
 

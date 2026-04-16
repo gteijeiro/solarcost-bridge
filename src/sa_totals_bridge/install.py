@@ -45,7 +45,11 @@ def run_init(argv: list[str] | None = None) -> int:
     parser.parse_args(argv)
 
     install_config = prompt_install_config()
-    write_runtime_files(install_config)
+    validate_install_config(install_config)
+    try:
+        write_runtime_files(install_config)
+    except PermissionError as exc:
+        raise RuntimeError(permission_help(install_config)) from exc
     if install_config.service_mode != "none" and install_config.enable_now:
         enable_service(install_config)
     print_summary(install_config)
@@ -145,6 +149,11 @@ def write_runtime_files(install_config: BridgeInstallConfig) -> None:
         )
 
 
+def validate_install_config(install_config: BridgeInstallConfig) -> None:
+    if install_config.service_mode == "system" and not is_root():
+        raise RuntimeError(permission_help(install_config))
+
+
 def build_env_file(install_config: BridgeInstallConfig) -> str:
     lines = [
         "# Solar Assistant Costs Bridge",
@@ -229,6 +238,21 @@ def print_summary(install_config: BridgeInstallConfig) -> None:
         print(f"- Servicio: {install_config.service_path}")
         if install_config.service_mode == "user":
             print("- Si quieres que el servicio de usuario arranque al boot, revisa `loginctl enable-linger`.")
+
+
+def permission_help(install_config: BridgeInstallConfig) -> str:
+    executable = Path(sys.argv[0]).expanduser()
+    service_path = install_config.service_path or Path("/etc/systemd/system/sa-totals-bridge.service")
+    return (
+        "Para instalar un servicio de sistema debes ejecutar el asistente con permisos de root. "
+        "Si el paquete esta dentro de un .venv, `sudo sa-totals-bridge init` normalmente no funciona "
+        "porque sudo no encuentra el binario del entorno virtual. "
+        f"Usa alguno de estos comandos:\n"
+        f"- sudo \"$(command -v sa-totals-bridge)\" init\n"
+        f"- sudo {executable} init\n"
+        "Si prefieres no usar sudo, elige `user` como modo de servicio. "
+        f"El unit file de sistema se intentaba escribir en {service_path}."
+    )
 
 
 def env_line(key: str, value: str) -> str:

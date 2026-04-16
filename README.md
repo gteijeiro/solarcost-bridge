@@ -15,9 +15,21 @@ Bridge en Python para:
 
 ## Instalacion
 
+En Debian, Raspberry Pi OS y derivados no debes usar `pip install` global porque el sistema bloquea ese flujo con PEP 668 (`externally-managed-environment`).
+
+Primero instala soporte para entornos virtuales:
+
+```bash
+sudo apt update
+sudo apt install -y python3-full python3-venv
+```
+
+Luego instala el bridge dentro de un `.venv`:
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
 pip install .
 ```
 
@@ -30,13 +42,80 @@ Bootstrap automatico desde el repo:
 Tambien puedes instalarlo directamente desde GitHub:
 
 ```bash
-pipx install "git+https://github.com/gteijeiro/solar-assistant-costs-bridge.git"
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install "git+https://github.com/gteijeiro/solar-assistant-costs-bridge.git"
 ```
 
 Y luego ejecutar el asistente:
 
 ```bash
 sa-totals-bridge init
+```
+
+Si quieres instalar un servicio `system`, ejecuta el asistente con `sudo` usando la ruta real del binario del `.venv`:
+
+```bash
+sudo "$(command -v sa-totals-bridge)" init
+```
+
+Si `command -v` no devuelve nada o `sudo` no encuentra el binario, usa la ruta completa:
+
+```bash
+sudo /ruta/a/tu/.venv/bin/sa-totals-bridge init
+```
+
+Si no quieres usar `sudo`, puedes ejecutar `sa-totals-bridge init` normal y elegir `user` como modo de servicio.
+
+## Desinstalacion
+
+`pip uninstall` solo elimina el paquete instalado dentro del entorno virtual. No borra automaticamente:
+
+- el archivo `bridge.env`,
+- la base SQLite,
+- el directorio de trabajo,
+- los unit files de `systemd`,
+- ni los servicios habilitados.
+
+Eso es intencional para no perder configuracion o datos sin querer.
+
+Si quieres una desinstalacion conservando configuracion:
+
+```bash
+source .venv/bin/activate
+pip uninstall solar-assistant-costs-bridge
+```
+
+O con el asistente interactivo:
+
+```bash
+sa-totals-bridge uninstall
+```
+
+Si quieres tocar un servicio `system`, usa:
+
+```bash
+sudo "$(command -v sa-totals-bridge)" uninstall
+```
+
+Si instalaste desde el repo, tambien puedes usar:
+
+```bash
+./uninstall.sh
+```
+
+Si quieres una desinstalacion limpia completa:
+
+```bash
+sudo systemctl stop sa-totals-bridge.service
+sudo systemctl disable sa-totals-bridge.service
+sudo rm -f /etc/systemd/system/sa-totals-bridge.service
+sudo systemctl daemon-reload
+
+rm -f /ruta/a/bridge.env
+rm -f /ruta/a/data/solar_assistant_totals.sqlite3
+rm -rf /ruta/al/directorio/de/trabajo
 ```
 
 ## Despliegue rapido en Raspberry Pi
